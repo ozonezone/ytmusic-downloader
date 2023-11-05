@@ -1,4 +1,4 @@
-import { getLoginCode, loginAndSetupMuse } from "@/lib/muse";
+import { getLoginCode, loginAndSetup } from "@/lib/muse/auth";
 import { redirect } from "next/navigation";
 
 export default async function Page() {
@@ -22,7 +22,7 @@ export default async function Page() {
       <form
         action={async () => {
           "use server";
-          await loginAndSetupMuse(loginCode);
+          await loginAndSetup(loginCode);
           redirect("/");
         }}
       >

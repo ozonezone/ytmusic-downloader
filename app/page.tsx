@@ -1,11 +1,9 @@
-import { setupMuse } from "@/lib/muse";
 import { redirect } from "next/navigation";
 import PageClient from "./pageClient";
+import { authed } from "@/lib/muse/auth";
 
 export default async function Home() {
-  try {
-    await setupMuse();
-  } catch {
+  if (!authed()) {
     redirect("/login");
   }
 

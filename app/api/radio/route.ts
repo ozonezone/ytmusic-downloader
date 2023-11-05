@@ -1,44 +1,38 @@
-import { get_playlist } from "libmuse";
-
-function iteratorToStream(iterator: any) {
-  return new ReadableStream({
-    async pull(controller) {
-      const { value, done } = await iterator.next();
-
-      if (done) {
-        controller.close();
-      } else {
-        controller.enqueue(value);
-      }
-    },
-  });
-}
-
-const encoder = new TextEncoder();
-
-async function* makeIterator(playlist_id: string) {
-  yield encoder.encode(`Fetching playlist id: ${playlist_id}\n`);
-  const playlist = await get_playlist(playlist_id);
-  for (const track of playlist.tracks) {
-    yield encoder.encode(`${track.title}\n`);
-  }
-}
+import { get_queue } from "libmuse";
+import {
+  createStream,
+  downloadTracks,
+  extractParamFromReqeust,
+} from "../_utils";
+import sanitize from "sanitize-filename";
 
 export async function GET(request: Request) {
-  const params = new URL(request.url).searchParams;
-  const url_s = params.get("url");
-  if (!url_s) {
-    throw new Error("No url provided");
-  }
-  const url = new URL(url_s);
-  const url_params = url.searchParams;
-  const playlist_id = url_params.get("list");
-  if (!playlist_id) {
-    throw new Error("No playlist id provided");
-  }
+  const { stream, sendMessage, closeMessage } = createStream();
 
-  const iterator = makeIterator(playlist_id);
-  const stream = iteratorToStream(iterator);
+  (async () => {
+    const video_id = extractParamFromReqeust("v", request);
+    if (!video_id) {
+      sendMessage("No video id found");
+      closeMessage();
+      return;
+    }
+
+    sendMessage(
+      `Fetching video id: ${video_id}`,
+    );
+    try {
+      const queue = await get_queue(video_id, null, { radio: true });
+      await downloadTracks(
+        queue.tracks,
+        `./downloads/${sanitize("Radio of " + video_id)}/`,
+        sendMessage,
+      );
+    } catch (e) {
+      sendMessage(`Failed fetch radio of video: ${e}`);
+    }
+
+    closeMessage();
+  })();
 
   return new Response(stream);
 }
