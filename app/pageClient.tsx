@@ -1,6 +1,5 @@
 "use client";
 
-import type { User } from "libmuse";
 import { useState } from "react";
 import { Input } from "valibot";
 import { DownloadRequestPostSchema } from "./api/_validate";

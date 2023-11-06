@@ -3,6 +3,7 @@ import { get_option } from "libmuse";
 import tempfile from "tempfile";
 import { spawn } from "child_process";
 import * as fs from "fs/promises";
+import * as path from "path";
 import sanitize from "sanitize-filename";
 
 export type DownloadTrack = {
@@ -49,8 +50,10 @@ export async function downloadTracks(
     // ffmpeg cannot handle m4a metadata well. So, we convert it to mp4 first.
     // After ffmpeg, we rename it back to m4a.
     const ffmpegTempPath = tempfile({ extension: "mp4" });
-    const outputPath = (options.indexName ? `${i + 1} - ` : "") + outputFolder +
-      sanitize(track.title) + ".m4a";
+    const outputPath = path.join(
+      outputFolder,
+      (options.indexName ? `${i + 1} - ` : "") + sanitize(track.title) + ".m4a",
+    );
 
     try {
       await downloadTrack(
