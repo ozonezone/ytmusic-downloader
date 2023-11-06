@@ -1,8 +1,9 @@
 "use client";
 
+import { User } from "libmuse";
 import { useState } from "react";
 
-export default function () {
+export default function ({ me }: { me: User }) {
   const [downloading, setDownloading] = useState(false);
   const [playlistUrl, setPlaylistUrl] = useState("");
   const [radioUrl, setRadioUrl] = useState("");
@@ -23,26 +24,29 @@ export default function () {
 
     const pump = async (reader: ReadableStreamDefaultReader<Uint8Array>) => {
       const content = await reader.read();
-      if (content.done) return;
+      if (content.done) {
+        setLog((prev) => prev + "Downloaded\n");
+        return;
+      }
       const value = new TextDecoder().decode(content.value);
-      console.log(value);
       setLog((prev) => prev + value);
       pump(reader);
     };
     pump(stream.getReader());
 
-    setLog((prev) => prev + "Downloaded\n");
     setDownloading(false);
   };
 
   return (
-    <div>
+    <div className="flex flex-col">
+      <h1 className="text-2xl">YTMusic downloader</h1>
+      <div>Logged in as {me.name}</div>
       <fieldset
         disabled={downloading}
         className="flex flex-col justify-center items-center w-full gap-2 p-2"
       >
         <div className="flex flex-col w-full gap-1">
-          <h1 className="text-2xl">Download playlist</h1>
+          <h2 className="text-xl">Download playlist</h2>
           <div className="flex gap-2 w-full">
             <input
               type="text"
@@ -59,7 +63,7 @@ export default function () {
           </div>
         </div>
         <div className="flex flex-col w-full gap-1">
-          <h1 className="text-2xl">Download radio</h1>
+          <h2 className="text-xl">Download radio</h2>
           <div className="flex gap-2 w-full">
             <input
               type="text"

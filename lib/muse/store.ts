@@ -1,5 +1,6 @@
 import { Store } from "libmuse";
 import * as fs from "fs";
+import { dirname } from "path";
 
 export class NodeFileStore extends Store {
   map: Map<string, unknown> = new Map();
@@ -17,6 +18,7 @@ export class NodeFileStore extends Store {
         this.map = new Map(Object.entries(json));
       }
     } catch (_error) {
+      fs.mkdirSync(dirname(path), { recursive: true });
       this.map = new Map();
       this.set("version", this.version);
     }

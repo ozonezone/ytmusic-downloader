@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 export default async function Page() {
   const loginCode = await getLoginCode();
   if (!loginCode) {
-    return <div>Maybe you're already logged in?</div>;
+    redirect("/");
   }
 
   return (
