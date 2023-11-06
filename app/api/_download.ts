@@ -19,7 +19,10 @@ export async function downloadTracks(
   tracks: DownloadTrack[],
   outputFolder: string,
   sendMessage: (message: string) => void,
-  nameIndex: boolean = false,
+  options: {
+    indexName: boolean;
+    overwrite: boolean;
+  },
 ) {
   setup();
   const auth = get_option("auth");
@@ -44,13 +47,18 @@ export async function downloadTracks(
     await downloadTrack(track.videoId, auth.token!.access_token, ytDlpTempPath);
     // ffmpeg cannot handle m4a metadata well. So, we convert it to mp4 first.
     // After ffmpeg, we rename it back to m4a.
-    const ffmpegTempPath = outputFolder + track.videoId + ".mp4";
-    const outputPath = (nameIndex ? `${i + 1} - ` : "") + outputFolder +
+    const ffmpegTempPath = tempfile({ extension: "mp4" });
+    const outputPath = (options.indexName ? `${i + 1} - ` : "") + outputFolder +
       sanitize(track.title) + ".m4a";
 
     try {
-      await addMetadata(ytDlpTempPath, ffmpegTempPath, track);
-      await fs.rename(ffmpegTempPath, outputPath);
+      await addMetadata(
+        ytDlpTempPath,
+        ffmpegTempPath,
+        track,
+        options.overwrite,
+      );
+      await fs.copyFile(ffmpegTempPath, outputPath);
       sendMessage(`Downloaded ${track.title}`);
     } catch (e) {
       if (e && typeof e === "object") {
@@ -61,7 +69,10 @@ export async function downloadTracks(
       }
       sendMessage(`Failed to download ${track.title}: ${e}`);
     } finally {
-      await fs.rm(ytDlpTempPath);
+      try {
+        await fs.rm(ffmpegTempPath);
+        await fs.rm(ytDlpTempPath);
+      } catch {}
     }
   }));
 
@@ -105,6 +116,7 @@ async function addMetadata(
   inputPath: string,
   outputPath: string,
   metaData: DownloadTrack,
+  overwrite: boolean,
 ) {
   await new Promise((resolve, reject) => {
     let stdout = "";
@@ -131,7 +143,13 @@ async function addMetadata(
     if (metaData.year) {
       options.push("-metadata", `year=${metaData.year}`);
     }
-    options.push("-y", outputPath);
+
+    if (overwrite) {
+      options.push("-y");
+    } else {
+      options.push("-n");
+    }
+    options.push(outputPath);
 
     const proc = spawn("ffmpeg", options);
 

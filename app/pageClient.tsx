@@ -2,6 +2,8 @@
 
 import type { User } from "libmuse";
 import { useState } from "react";
+import { Input } from "valibot";
+import { DownloadRequestPostSchema } from "./api/_validate";
 
 type Log = {
   title: string;
@@ -13,6 +15,9 @@ export default function ({ me }: { me: User }) {
   const [downloading, setDownloading] = useState(false);
   const [playlistUrl, setPlaylistUrl] = useState("");
   const [radioUrl, setRadioUrl] = useState("");
+  const [checkExcludeUGC, setCheckExcludeUGC] = useState(true);
+  const [checkOverwrite, setCheckOverwrite] = useState(true);
+  const [checkIndexName, setCheckIndexName] = useState(false);
   const [log, setLog] = useState<Log[]>([]);
 
   const startLog = (title: string) => {
@@ -46,11 +51,22 @@ export default function ({ me }: { me: User }) {
     appendLog("Download starting...\n");
     let api = "";
     if (type === "radio") {
-      api = `/api/radio?url=${encodeURIComponent(radioUrl)}`;
+      api = `/api/radio`;
     } else {
-      api = `/api/playlist?url=${encodeURIComponent(playlistUrl)}`;
+      api = `/api/playlist`;
     }
-    const res = await fetch(api);
+
+    const body: Input<typeof DownloadRequestPostSchema> = {
+      url: type === "radio" ? radioUrl : playlistUrl,
+      excludeUserGeneratedContents: checkExcludeUGC,
+      overwrite: checkOverwrite,
+      indexName: checkIndexName,
+    };
+
+    const res = await fetch(api, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
     const stream = res.body;
     if (!stream) return;
 
@@ -77,13 +93,37 @@ export default function ({ me }: { me: User }) {
         disabled={downloading}
         className="flex flex-col w-full gap-2 p-2"
       >
-        <div>
+        <div className="flex flex-wrap gap-2 items-center">
           <button
             onClick={() => setLog([])}
             className="bg-gray-200 hover:bg-gray-300 rounded-md p-2"
           >
             Clear log
           </button>
+          <label>
+            <input
+              type="checkbox"
+              checked={checkExcludeUGC}
+              onChange={() => setCheckExcludeUGC((prev) => !prev)}
+            />
+            Exclude user generated contents
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={checkOverwrite}
+              onChange={() => setCheckOverwrite((prev) => !prev)}
+            />
+            Overwrite existing files
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={checkIndexName}
+              onChange={() => setCheckIndexName((prev) => !prev)}
+            />
+            Index name
+          </label>
         </div>
         <div className="flex flex-col w-full gap-1">
           <h2 className="text-xl">Download playlist</h2>

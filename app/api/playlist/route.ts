@@ -1,36 +1,58 @@
-import {
-  createStream,
-  extractParamFromReqeust,
-  getBestThumbnail,
-} from "../_utils";
+import { createStream, extractParamFromUrl, getBestThumbnail } from "../_utils";
 import sanitize from "sanitize-filename";
 import { get_playlist } from "@/lib/muse/api";
 import { downloadTracks } from "../_download";
+import { safeParse } from "valibot";
+import { DownloadRequestPostSchema } from "../_validate";
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   const { stream, sendMessage, closeMessage } = createStream();
 
   (async () => {
-    const playlist_id = extractParamFromReqeust("list", request);
-    if (!playlist_id) {
+    const parseRes = safeParse(DownloadRequestPostSchema, await request.json());
+    if (!parseRes.success) {
+      sendMessage("Invalid request body");
+      closeMessage();
+      return;
+    }
+    const opts = parseRes.output;
+
+    const id = extractParamFromUrl(opts.url, "list");
+    if (!id) {
       sendMessage("No playlist id found");
       closeMessage();
       return;
     }
 
-    sendMessage(`Fetching playlist id: ${playlist_id}`);
+    sendMessage(`Fetching playlist id: ${id}`);
+
     try {
-      const playlist = await get_playlist(playlist_id);
-      await downloadTracks(
-        playlist.tracks.map((track) => ({
+      const playlist = await get_playlist(id);
+      let tracks = playlist.tracks;
+      if (opts.excludeUserGeneratedContents) {
+        tracks = tracks.filter((t) => {
+          if (t.videoType === "MUSIC_VIDEO_TYPE_UGC") {
+            sendMessage(`Excluding ${t.title} ( ${t.videoId} )`);
+            return false;
+          }
+          return true;
+        });
+      }
+
+      const download_tracks = tracks.map((track) => {
+        return {
           videoId: track.videoId,
           title: track.title,
           artist: track.artists.map((a) => a.name).join(", "),
           album: track.album?.name,
           thumbnailUrl: getBestThumbnail(track.thumbnails),
-        })),
+        };
+      });
+      await downloadTracks(
+        download_tracks,
         `./downloads/${sanitize(playlist.title)}/`,
         sendMessage,
+        { indexName: opts.indexName, overwrite: opts.overwrite },
       );
     } catch (e) {
       sendMessage(`Failed fetch playlist: ${e}`);

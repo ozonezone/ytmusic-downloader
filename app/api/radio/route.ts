@@ -1,30 +1,46 @@
 import { get_queue } from "@/lib/muse/api";
-import {
-  createStream,
-  extractParamFromReqeust,
-  getBestThumbnail,
-} from "../_utils";
+import { createStream, extractParamFromUrl, getBestThumbnail } from "../_utils";
 import sanitize from "sanitize-filename";
 import { downloadTracks } from "../_download";
+import { safeParse } from "valibot";
+import { DownloadRequestPostSchema } from "../_validate";
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   const { stream, sendMessage, closeMessage } = createStream();
 
   (async () => {
-    const video_id = extractParamFromReqeust("v", request);
-    if (!video_id) {
+    const parseRes = safeParse(DownloadRequestPostSchema, request.json());
+    if (!parseRes.success) {
+      sendMessage("Invalid request body");
+      closeMessage();
+      return;
+    }
+    const opts = parseRes.output;
+
+    const id = extractParamFromUrl(opts.url, "v");
+    if (!id) {
       sendMessage("No video id found");
       closeMessage();
       return;
     }
 
     sendMessage(
-      `Fetching video id: ${video_id}`,
+      `Fetching video id: ${id}`,
     );
     try {
-      const queue = await get_queue(video_id, null, { radio: true });
+      const queue = await get_queue(id, null, { radio: true });
+      let tracks = queue.tracks;
+      if (opts.excludeUserGeneratedContents) {
+        tracks = tracks.filter((t) => {
+          if (t.videoType === "MUSIC_VIDEO_TYPE_UGC") {
+            sendMessage(`Excluding ${t.title} (${t.videoId})`);
+            return false;
+          }
+          return true;
+        });
+      }
       await downloadTracks(
-        queue.tracks.map((track) => ({
+        tracks.map((track) => ({
           videoId: track.videoId,
           title: track.title,
           artist: track.artists.map((a) => a.name).join(", "),
@@ -32,8 +48,9 @@ export async function GET(request: Request) {
           year: track.year ?? undefined,
           thumbnailUrl: getBestThumbnail(track.thumbnails),
         })),
-        `./downloads/${sanitize("Radio of " + video_id)}/`,
+        `./downloads/${sanitize("Radio of " + id)}/`,
         sendMessage,
+        { indexName: opts.indexName, overwrite: opts.overwrite },
       );
     } catch (e) {
       sendMessage(`Failed fetch radio of video: ${e}`);

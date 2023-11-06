@@ -22,23 +22,14 @@ export function createStream() {
   };
 }
 
-export function extractParamFromReqeust(key: string, request: Request) {
+export function extractParamFromUrl(u: string, key: string) {
   try {
-    const params = new URL(request.url).searchParams;
-    const url_s = params.get("url");
-    if (!url_s) {
-      return;
-    }
-    try {
-      const url = new URL(url_s);
-      const url_params = url.searchParams;
-      const val = url_params.get(key);
-      return val;
-    } catch {
-      return url_s;
-    }
+    const url = new URL(u);
+    const url_params = url.searchParams;
+    const val = url_params.get(key);
+    return val;
   } catch {
-    return;
+    return u;
   }
 }
 
