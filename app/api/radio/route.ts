@@ -1,10 +1,11 @@
 import { get_queue } from "@/lib/muse/api";
 import {
   createStream,
-  downloadTracks,
   extractParamFromReqeust,
+  getBestThumbnail,
 } from "../_utils";
 import sanitize from "sanitize-filename";
+import { downloadTracks } from "../_download";
 
 export async function GET(request: Request) {
   const { stream, sendMessage, closeMessage } = createStream();
@@ -23,7 +24,14 @@ export async function GET(request: Request) {
     try {
       const queue = await get_queue(video_id, null, { radio: true });
       await downloadTracks(
-        queue.tracks,
+        queue.tracks.map((track) => ({
+          videoId: track.videoId,
+          title: track.title,
+          artist: track.artists.map((a) => a.name).join(", "),
+          album: track.album?.name,
+          year: track.year ?? undefined,
+          thumbnailUrl: getBestThumbnail(track.thumbnails),
+        })),
         `./downloads/${sanitize("Radio of " + video_id)}/`,
         sendMessage,
       );

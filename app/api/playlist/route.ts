@@ -1,10 +1,11 @@
 import {
   createStream,
-  downloadTracks,
   extractParamFromReqeust,
+  getBestThumbnail,
 } from "../_utils";
 import sanitize from "sanitize-filename";
 import { get_playlist } from "@/lib/muse/api";
+import { downloadTracks } from "../_download";
 
 export async function GET(request: Request) {
   const { stream, sendMessage, closeMessage } = createStream();
@@ -21,7 +22,13 @@ export async function GET(request: Request) {
     try {
       const playlist = await get_playlist(playlist_id);
       await downloadTracks(
-        playlist.tracks,
+        playlist.tracks.map((track) => ({
+          videoId: track.videoId,
+          title: track.title,
+          artist: track.artists.map((a) => a.name).join(", "),
+          album: track.album?.name,
+          thumbnailUrl: getBestThumbnail(track.thumbnails),
+        })),
         `./downloads/${sanitize(playlist.title)}/`,
         sendMessage,
       );

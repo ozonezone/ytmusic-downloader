@@ -5,6 +5,7 @@ export async function setup() {
   setupMuse({
     store: new NodeFileStore("config/token.json"),
     debug: true,
+    language: "ja",
   });
 }
 
@@ -28,5 +29,4 @@ export async function loginAndSetup(loginCode: LoginCode) {
   setup();
   const auth = get_option("auth");
   const token = await auth.load_token_with_code(loginCode);
-  console.log(token);
 }

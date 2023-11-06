@@ -29,7 +29,6 @@ export class NodeFileStore extends Store {
   }
 
   set(key: string, value: unknown): void {
-    console.log(key, value);
     this.map.set(key, value);
 
     this.save();
