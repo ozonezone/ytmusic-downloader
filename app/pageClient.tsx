@@ -11,7 +11,7 @@ type Log = {
   completed: boolean;
 };
 
-export default function ({ me }: { me: User }) {
+export default function () {
   const [downloading, setDownloading] = useState(false);
   const [playlistUrl, setPlaylistUrl] = useState("");
   const [radioUrl, setRadioUrl] = useState("");
@@ -88,7 +88,6 @@ export default function ({ me }: { me: User }) {
   return (
     <div className="flex flex-col">
       <h1 className="text-2xl">YTMusic downloader</h1>
-      <div>Logged in as {me.name}</div>
       <fieldset
         disabled={downloading}
         className="flex flex-col w-full gap-2 p-2"
