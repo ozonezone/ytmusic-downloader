@@ -4,6 +4,8 @@ import { get_playlist } from "@/lib/muse/api";
 import { downloadTracks } from "../_download";
 import { safeParse } from "valibot";
 import { DownloadRequestPostSchema } from "../_validate";
+import * as path from "path";
+import { DOWNLOAD_DIR } from "@/lib/constants";
 
 export async function POST(request: Request) {
   const { stream, sendMessage, closeMessage } = createStream();
@@ -50,7 +52,7 @@ export async function POST(request: Request) {
       });
       await downloadTracks(
         download_tracks,
-        `./downloads/${sanitize(playlist.title)}/`,
+        path.join(DOWNLOAD_DIR, sanitize(playlist.title)),
         sendMessage,
         { indexName: opts.indexName, overwrite: opts.overwrite },
       );

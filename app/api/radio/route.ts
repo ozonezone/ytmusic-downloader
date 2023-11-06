@@ -4,6 +4,8 @@ import sanitize from "sanitize-filename";
 import { downloadTracks } from "../_download";
 import { safeParse } from "valibot";
 import { DownloadRequestPostSchema } from "../_validate";
+import * as path from "path";
+import { DOWNLOAD_DIR } from "@/lib/constants";
 
 export async function POST(request: Request) {
   const { stream, sendMessage, closeMessage } = createStream();
@@ -58,9 +60,10 @@ export async function POST(request: Request) {
             thumbnailUrl: getBestThumbnail(track.thumbnails),
           };
         }),
-        `./downloads/${
-          sanitize(`Radio of ${queue.tracks[0].title} (${id})`)
-        } ${Date.now()}/`,
+        path.join(
+          DOWNLOAD_DIR,
+          sanitize(`Radio of ${queue.tracks[0].title} (${id}) ${Date.now()}`),
+        ),
         sendMessage,
         { indexName: opts.indexName, overwrite: opts.overwrite },
       );

@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  ytmusic-downloader:
+    container_name: next-app
+    build: .
+    volumes:
+      - ./downloads:/downloads
+      - ./config:/config
+    restart: "no"
+    ports:
+      - 3001:3000

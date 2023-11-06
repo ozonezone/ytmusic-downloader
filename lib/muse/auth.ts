@@ -1,9 +1,10 @@
 import { get_option, LoginCode, setup as setupMuse } from "libmuse";
 import { NodeFileStore } from "./store";
+import { CONFIG_PATH } from "../constants";
 
 export async function setup() {
   setupMuse({
-    store: new NodeFileStore("config/token.json"),
+    store: new NodeFileStore(CONFIG_PATH),
     debug: true,
     language: "ja",
   });
