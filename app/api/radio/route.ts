@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   const { stream, sendMessage, closeMessage } = createStream();
 
   (async () => {
-    const parseRes = safeParse(DownloadRequestPostSchema, request.json());
+    const parseRes = safeParse(DownloadRequestPostSchema, await request.json());
     if (!parseRes.success) {
       sendMessage("Invalid request body");
       closeMessage();
@@ -30,25 +30,37 @@ export async function POST(request: Request) {
     try {
       const queue = await get_queue(id, null, { radio: true });
       let tracks = queue.tracks;
-      if (opts.excludeUserGeneratedContents) {
-        tracks = tracks.filter((t) => {
-          if (t.videoType === "MUSIC_VIDEO_TYPE_UGC") {
+      if (opts.excludeVideo) {
+        tracks = tracks.flatMap((t) => {
+          if (t.videoType !== "MUSIC_VIDEO_TYPE_ATV") {
+            if (t.counterpart) {
+              if (t.counterpart.videoType == "MUSIC_VIDEO_TYPE_ATV") {
+                sendMessage(
+                  `Replaced video to counterpart: ${t.title} (${t.videoId}) -> ${t.counterpart.title} (${t.counterpart.videoId})`,
+                );
+                return [t.counterpart];
+              }
+            }
             sendMessage(`Excluding ${t.title} (${t.videoId})`);
-            return false;
+            return [];
           }
-          return true;
+          return [t];
         });
       }
       await downloadTracks(
-        tracks.map((track) => ({
-          videoId: track.videoId,
-          title: track.title,
-          artist: track.artists.map((a) => a.name).join(", "),
-          album: track.album?.name,
-          year: track.year ?? undefined,
-          thumbnailUrl: getBestThumbnail(track.thumbnails),
-        })),
-        `./downloads/${sanitize("Radio of " + id)}/`,
+        tracks.map((track) => {
+          return {
+            videoId: track.videoId,
+            title: track.title,
+            artist: track.artists.map((a) => a.name).join(", "),
+            album: track.album?.name,
+            year: track.year ?? undefined,
+            thumbnailUrl: getBestThumbnail(track.thumbnails),
+          };
+        }),
+        `./downloads/${
+          sanitize(`Radio of ${queue.tracks[0].title} (${id})`)
+        } ${Date.now()}/`,
         sendMessage,
         { indexName: opts.indexName, overwrite: opts.overwrite },
       );

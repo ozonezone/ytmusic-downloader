@@ -15,7 +15,7 @@ export default function ({ me }: { me: User }) {
   const [downloading, setDownloading] = useState(false);
   const [playlistUrl, setPlaylistUrl] = useState("");
   const [radioUrl, setRadioUrl] = useState("");
-  const [checkExcludeUGC, setCheckExcludeUGC] = useState(true);
+  const [checkExcludeVideo, setCheckExcludeVideo] = useState(true);
   const [checkOverwrite, setCheckOverwrite] = useState(true);
   const [checkIndexName, setCheckIndexName] = useState(false);
   const [log, setLog] = useState<Log[]>([]);
@@ -58,7 +58,7 @@ export default function ({ me }: { me: User }) {
 
     const body: Input<typeof DownloadRequestPostSchema> = {
       url: type === "radio" ? radioUrl : playlistUrl,
-      excludeUserGeneratedContents: checkExcludeUGC,
+      excludeVideo: checkExcludeVideo,
       overwrite: checkOverwrite,
       indexName: checkIndexName,
     };
@@ -103,10 +103,10 @@ export default function ({ me }: { me: User }) {
           <label>
             <input
               type="checkbox"
-              checked={checkExcludeUGC}
-              onChange={() => setCheckExcludeUGC((prev) => !prev)}
+              checked={checkExcludeVideo}
+              onChange={() => setCheckExcludeVideo((prev) => !prev)}
             />
-            Exclude user generated contents
+            Exclude video (if counterpart audio exists, it will be downloaded)
           </label>
           <label>
             <input

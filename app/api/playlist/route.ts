@@ -29,9 +29,9 @@ export async function POST(request: Request) {
     try {
       const playlist = await get_playlist(id);
       let tracks = playlist.tracks;
-      if (opts.excludeUserGeneratedContents) {
+      if (opts.excludeVideo) {
         tracks = tracks.filter((t) => {
-          if (t.videoType === "MUSIC_VIDEO_TYPE_UGC") {
+          if (t.videoType !== "MUSIC_VIDEO_TYPE_ATV") {
             sendMessage(`Excluding ${t.title} ( ${t.videoId} )`);
             return false;
           }

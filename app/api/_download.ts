@@ -33,9 +33,11 @@ export async function downloadTracks(
 
   sendMessage(`Downloading ${tracks.length} tracks to ${outputFolder}`);
   tracks.forEach((track) => {
-    sendMessage(`|  Downloading ${track.title}`);
+    sendMessage(`|  Downloading ${track.title} (${track.videoId})`);
   });
 
+  let success = 0;
+  let failed = 0;
   await Promise.all(tracks.map(async (track, i) => {
     if (!track.videoId) {
       sendMessage(
@@ -44,7 +46,6 @@ export async function downloadTracks(
       return;
     }
     const ytDlpTempPath = tempfile({ extension: "m4a" });
-    await downloadTrack(track.videoId, auth.token!.access_token, ytDlpTempPath);
     // ffmpeg cannot handle m4a metadata well. So, we convert it to mp4 first.
     // After ffmpeg, we rename it back to m4a.
     const ffmpegTempPath = tempfile({ extension: "mp4" });
@@ -52,6 +53,11 @@ export async function downloadTracks(
       sanitize(track.title) + ".m4a";
 
     try {
+      await downloadTrack(
+        track.videoId,
+        auth.token!.access_token,
+        ytDlpTempPath,
+      );
       await addMetadata(
         ytDlpTempPath,
         ffmpegTempPath,
@@ -59,15 +65,21 @@ export async function downloadTracks(
         options.overwrite,
       );
       await fs.copyFile(ffmpegTempPath, outputPath);
-      sendMessage(`Downloaded ${track.title}`);
+      success++;
+      sendMessage(
+        `Downloaded ${track.title} (success: ${success}, failed: ${failed})`,
+      );
     } catch (e) {
+      failed++;
+      let mes = e;
       if (e && typeof e === "object") {
         if ("shortMessage" in e) {
-          sendMessage(`Failed to download ${track.title}: ${e.shortMessage}`);
-          return;
+          mes = e.shortMessage;
         }
       }
-      sendMessage(`Failed to download ${track.title}: ${e}`);
+      sendMessage(
+        `Failed to download ${track.title} (success: ${success}, failed: ${failed}): ${mes}`,
+      );
     } finally {
       try {
         await fs.rm(ffmpegTempPath);
