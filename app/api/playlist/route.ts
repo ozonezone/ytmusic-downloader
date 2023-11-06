@@ -1,10 +1,10 @@
-import { get_playlist } from "libmuse";
 import {
   createStream,
   downloadTracks,
   extractParamFromReqeust,
 } from "../_utils";
 import sanitize from "sanitize-filename";
+import { get_playlist } from "@/lib/muse/api";
 
 export async function GET(request: Request) {
   const { stream, sendMessage, closeMessage } = createStream();

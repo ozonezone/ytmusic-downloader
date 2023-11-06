@@ -1,6 +1,6 @@
 "use client";
 
-import { User } from "libmuse";
+import type { User } from "libmuse";
 import { useState } from "react";
 
 export default function ({ me }: { me: User }) {
@@ -29,6 +29,7 @@ export default function ({ me }: { me: User }) {
         return;
       }
       const value = new TextDecoder().decode(content.value);
+      console.log("content", value);
       setLog((prev) => prev + value);
       pump(reader);
     };

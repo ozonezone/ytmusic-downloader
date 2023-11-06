@@ -1,4 +1,4 @@
-import { get_queue } from "libmuse";
+import { get_queue } from "@/lib/muse/api";
 import {
   createStream,
   downloadTracks,

@@ -20,6 +20,9 @@ dependencies:
   sanitize-filename:
     specifier: ^1.6.3
     version: 1.6.3
+  tempfile:
+    specifier: ^5.0.0
+    version: 5.0.0
   youtube-dl-exec:
     specifier: ^2.4.17
     version: 2.4.17
@@ -1035,6 +1038,18 @@ packages:
     transitivePeerDependencies:
       - ts-node
     dev: true
+
+  /temp-dir@3.0.0:
+    resolution: {integrity: sha512-nHc6S/bwIilKHNRgK/3jlhDoIHcp45YgyiwcAk46Tr0LfEqGBVpmiAyuiuxeVE44m3mXnEeVhaipLOEWmH+Njw==}
+    engines: {node: '>=14.16'}
+    dev: false
+
+  /tempfile@5.0.0:
+    resolution: {integrity: sha512-bX655WZI/F7EoTDw9JvQURqAXiPHi8o8+yFxPF2lWYyz1aHnmMRuXWqL6YB6GmeO0o4DIYWHLgGNi/X64T+X4Q==}
+    engines: {node: '>=14.18'}
+    dependencies:
+      temp-dir: 3.0.0
+    dev: false
 
   /thenify-all@1.6.0:
     resolution: {integrity: sha512-RNxQH/qI8/t3thXJDwcstUO4zeqo64+Uy/+sNVRBx4Xn2OX+OZ9oP+iJnNFqplFra2ZUVeKCSa2oVWi3T4uVmA==}
