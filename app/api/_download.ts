@@ -23,6 +23,7 @@ export async function downloadTracks(
   options: {
     indexName: boolean;
     overwrite: boolean;
+    writeYoutubeId: boolean;
   },
 ) {
   setup();
@@ -33,6 +34,17 @@ export async function downloadTracks(
   } catch {}
 
   sendMessage(`Downloading ${tracks.length} tracks to ${outputFolder}`);
+
+  sendMessage(`Writing tracks info to ${outputFolder}/tracks.json`);
+  await fs.writeFile(
+    path.join(outputFolder, "tracks.json"),
+    JSON.stringify(
+      tracks,
+      null,
+      2,
+    ),
+  );
+
   tracks.forEach((track) => {
     sendMessage(`|  Downloading ${track.title} (${track.videoId})`);
   });
@@ -66,6 +78,7 @@ export async function downloadTracks(
         ffmpegTempPath,
         track,
         options.overwrite,
+        options.writeYoutubeId,
       );
       await fs.copyFile(ffmpegTempPath, outputPath);
       success++;
@@ -132,6 +145,7 @@ async function addMetadata(
   outputPath: string,
   metaData: DownloadTrack,
   overwrite: boolean,
+  writeYoutubeId: boolean,
 ) {
   await new Promise((resolve, reject) => {
     let stdout = "";
@@ -147,7 +161,7 @@ async function addMetadata(
       "-disposition:1", "attached_pic",
       "-id3v2_version", "3",
       "-metadata", `title=${metaData.title}`,
-      "-metadata", `artist=${metaData.artist}`
+      "-metadata", `artist=${metaData.artist}`,
     ]
     if (metaData.album) {
       options.push("-metadata", `album=${metaData.album}`);
@@ -157,6 +171,9 @@ async function addMetadata(
     }
     if (metaData.year) {
       options.push("-metadata", `year=${metaData.year}`);
+    }
+    if (writeYoutubeId) {
+      options.push("-metadata", `youtube_id=${metaData.videoId}`);
     }
 
     if (overwrite) {

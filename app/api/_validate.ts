@@ -6,4 +6,6 @@ export const DownloadRequestPostSchema = v.object({
   overwrite: v.boolean(),
   /// If true, the file name will be prefixed with the index of the song in the playlist.
   indexName: v.boolean(),
+  /// Write youtube id to the metadata.
+  writeYoutubeId: v.boolean(),
 });

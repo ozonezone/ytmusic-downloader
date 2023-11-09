@@ -17,6 +17,7 @@ export default function () {
   const [checkExcludeVideo, setCheckExcludeVideo] = useState(true);
   const [checkOverwrite, setCheckOverwrite] = useState(true);
   const [checkIndexName, setCheckIndexName] = useState(false);
+  const [checkWriteYoutubeId, setCheckWriteYoutubeId] = useState(true);
   const [log, setLog] = useState<Log[]>([]);
 
   const startLog = (title: string) => {
@@ -60,6 +61,7 @@ export default function () {
       excludeVideo: checkExcludeVideo,
       overwrite: checkOverwrite,
       indexName: checkIndexName,
+      writeYoutubeId: checkWriteYoutubeId,
     };
 
     const res = await fetch(api, {
@@ -113,6 +115,14 @@ export default function () {
               onChange={() => setCheckOverwrite((prev) => !prev)}
             />
             Overwrite existing files
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={checkWriteYoutubeId}
+              onChange={() => setCheckWriteYoutubeId((prev) => !prev)}
+            />
+            Write youtube_id tag to metadata
           </label>
           <label>
             <input

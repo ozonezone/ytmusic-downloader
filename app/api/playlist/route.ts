@@ -54,7 +54,7 @@ export async function POST(request: Request) {
         download_tracks,
         path.join(DOWNLOAD_DIR, sanitize(playlist.title)),
         sendMessage,
-        { indexName: opts.indexName, overwrite: opts.overwrite },
+        opts,
       );
     } catch (e) {
       sendMessage(`Failed fetch playlist: ${e}`);

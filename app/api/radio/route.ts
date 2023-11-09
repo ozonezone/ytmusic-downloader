@@ -65,7 +65,7 @@ export async function POST(request: Request) {
           sanitize(`Radio of ${queue.tracks[0].title} (${id}) ${Date.now()}`),
         ),
         sendMessage,
-        { indexName: opts.indexName, overwrite: opts.overwrite },
+        opts,
       );
     } catch (e) {
       sendMessage(`Failed fetch radio of video: ${e}`);
